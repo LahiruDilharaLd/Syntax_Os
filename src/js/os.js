@@ -233,15 +233,15 @@ function toolInit(w){
  const bind=()=>w.b.querySelectorAll("[data-k]").forEach(e=>{e.value=c[e.dataset.k];e.onchange=e.oninput=()=>{c[e.dataset.k]=e.value;if(e.dataset.k==="sc"){c.t=SC[c.sc][0].ip;q("[data-k=t]",w.b).value=c.t}save()}});bind();w.foc=()=>q("[data-k=t]",w.b)?.focus();
  let iv=null,L,i,cycle=0;const st=q(".stt",w.b),bar=q(".bar i",w.b),o=q(".to",w.b),rp=q(".rp",w.b),go=q("[data-a=go]",w.b),sp=q("[data-a=st]",w.b);
  const status=(t,k)=>{st.textContent=t;st.className="stt "+(k||"")};
- const end=(t,k)=>{clearInterval(iv);iv=null;go.disabled=false;sp.disabled=true;status(t,k)};
- w.close=()=>clearInterval(iv);
+ const end=(t,k)=>{clearTimeout(iv);iv=null;go.disabled=false;sp.disabled=true;status(t,k)};
+ w.close=()=>clearTimeout(iv);
  w.b.onclick=e=>{const a=e.target.dataset.a;if(!a)return;
   if(a==="go"&&!iv){o.innerHTML="";rp.textContent="";bar.style.width="0";L=gen(d,c);i=0;cycle=1;go.disabled=true;sp.disabled=false;status("RUNNING · CYCLE 1","WARN");
-   iv=setInterval(()=>{if(i<L.length){const[k,t]=PL(L[i++]),n=document.createElement("div");if(k)n.className=k;n.textContent=t;o.appendChild(n);o.scrollTop=o.scrollHeight;bar.style.width=i/L.length*100+"%"}
-    else{const f=/^e:Status/.test(last(L));rp.textContent="LATEST RESULTS\n"+resL(d,c).join("\n");if(cycle%10===0)sim(d.n,c.t,f?"FAILED":"CYCLE "+cycle);cycle++;L=gen(d,c);i=0;while(o.childNodes.length>500)o.firstChild.remove();bar.style.width="0";status("RUNNING · CYCLE "+cycle,f?"ALERT":"WARN")}},300)}
+   const step=()=>{if(!iv)return;if(i<L.length){const[k,t]=PL(L[i++]),n=document.createElement("div");if(k)n.className=k;n.textContent=t;o.appendChild(n);o.scrollTop=o.scrollHeight;bar.style.width=i/L.length*100+"%";iv=setTimeout(step,90+Math.random()*680)}
+    else{const f=/^e:Status/.test(last(L));rp.textContent="LATEST RESULTS\n"+resL(d,c).join("\n");if(cycle%10===0)sim(d.n,c.t,f?"FAILED":"CYCLE "+cycle);cycle++;L=gen(d,c);i=0;while(o.childNodes.length>500)o.firstChild.remove();bar.style.width="0";status("RUNNING · CYCLE "+cycle,f?"ALERT":"WARN");iv=setTimeout(step,250+Math.random()*1200)}};iv=setTimeout(step,90+Math.random()*680)}
   else if(a==="st"&&iv){end("STOPPED","WARN");sim(d.n,c.t,"STOPPED")}
   else if(a==="cl"){o.innerHTML="";rp.textContent="";bar.style.width="0"}
-  else if(a==="rs"){clearInterval(iv);iv=null;delete D.cfg[d.id];save();o.innerHTML="";rp.textContent="";bar.style.width="0";Object.assign(c,{sc:"Corp LAN",t:SC["Corp LAN"][0].ip,o:d.o[1][0],f:d.f[1]});bind();go.disabled=false;sp.disabled=true;status("IDLE")}}}
+  else if(a==="rs"){clearTimeout(iv);iv=null;delete D.cfg[d.id];save();o.innerHTML="";rp.textContent="";bar.style.width="0";Object.assign(c,{sc:"Corp LAN",t:SC["Corp LAN"][0].ip,o:d.o[1][0],f:d.f[1]});bind();go.disabled=false;sp.disabled=true;status("IDLE")}}}
 /* ---------- Wireshark simulator ---------- */
 AP.wire={t:"Wireshark",ic:"≋",w:[760,460],init:wireInit};
 function wireInit(w){
@@ -258,7 +258,7 @@ function wireInit(w){
  const stop=()=>{clearInterval(iv);iv=null;go.disabled=false;sp.disabled=true;st.textContent="STOPPED";st.className="stt"};
  w.close=()=>clearInterval(iv);
  w.b.onclick=e=>{const a=e.target.dataset.a,tr=e.target.closest("tr[data-p]");if(tr){sel=+tr.dataset.p;r()}
-  else if(a==="go"&&!iv){go.disabled=true;sp.disabled=false;st.textContent="CAPTURING (simulated)";st.className="stt OK";iv=setInterval(()=>{for(let i=0,k=1+R(3);i<k;i++)pk.push(mk());if(pk.length>1000)pk.splice(0,200);r()},400);sim("Wireshark","sample capture","STARTED")}
+  else if(a==="go"&&!iv){go.disabled=true;sp.disabled=false;st.textContent="CAPTURING (simulated)";st.className="stt OK";iv=setInterval(()=>{for(let i=0,k=1+R(3);i<k;i++)pk.push(mk());if(pk.length>1000)pk.splice(0,200);r()},100+Math.random()*650);sim("Wireshark","sample capture","STARTED")}
   else if(a==="st")stop();else if(a==="cl"){pk=[];sel=null;n=0;r()}};
  q(".ft",w.b).oninput=r;r()}
 /* ---------- Metasploit simulator ---------- */
@@ -273,9 +273,9 @@ function msfInit(w){
  const sync=()=>{if(!MOD[S.cat].includes(S.mod))S.mod=MOD[S.cat][0];mod.innerHTML=MOD[S.cat].map(m=>`<option>${m}</option>`).join("");mod.value=S.mod;w.b.querySelectorAll("[data-k]").forEach(e=>{if(e.dataset.k!=="mod")e.value=S[e.dataset.k]});save()};
  w.b.querySelectorAll("[data-k]").forEach(e=>e.onchange=e.oninput=()=>{S[e.target?e.target.dataset.k:e.dataset.k]=e.value});
  w.b.querySelectorAll("[data-k]").forEach(e=>{e.onchange=()=>{S[e.dataset.k]=e.value;if(e.dataset.k==="cat")sync();else save()}});
- const stop=()=>{clearInterval(iv);iv=null;go.disabled=false;stopBtn.disabled=true;st.textContent="STOPPED";st.className="stt"};
+ const stop=()=>{clearTimeout(iv);iv=null;go.disabled=false;stopBtn.disabled=true;st.textContent="STOPPED";st.className="stt"};
  const run=()=>{if(iv)return;const L=["i:[*] Handler cycle "+(cycle+1)+" initialized on "+S.host+":"+S.port,"i:[*] Module "+S.cat+"/"+S.mod,"i:[*] Payload: "+S.pay,"w:[*] Processing sample event stream...",S.cat==="exploit"?`o:[+] Fictional session activity refreshed (${S.pay} -> ${S.host})`:"o:[+] Module results refreshed"];let i=0;cycle++;go.disabled=true;stopBtn.disabled=false;st.textContent="RUNNING · CYCLE "+cycle;st.className="stt WARN";bar.style.width="0";
-  iv=setInterval(()=>{if(i<L.length){add(L[i++]);bar.style.width=i/L.length*100+"%"}else{if(S.cat==="exploit"&&!S.ses.some(x=>x.id===cycle))S.ses.push({id:cycle,pay:S.pay,host:S.host,t:clk()});sim("Metasploit",S.host,"CYCLE "+cycle);save();ses();i=0;cycle++;st.textContent="RUNNING · CYCLE "+cycle;bar.style.width="0"}},350)};
+  const step=()=>{if(!iv)return;if(i<L.length){add(L[i++]);bar.style.width=i/L.length*100+"%";iv=setTimeout(step,90+Math.random()*680)}else{if(S.cat==="exploit"&&!S.ses.some(x=>x.id===cycle))S.ses.push({id:cycle,pay:S.pay,host:S.host,t:clk()});sim("Metasploit",S.host,"CYCLE "+cycle);save();ses();i=0;cycle++;st.textContent="RUNNING · CYCLE "+cycle;bar.style.width="0";iv=setTimeout(step,250+Math.random()*1200)}};iv=setTimeout(step,90+Math.random()*680)};
  const cmd=s=>{add("msf6 > "+s);const[c,a,b]=s.trim().split(/\s+/);
   if(c==="help")add("i:show options | use <module> | set <RHOSTS|LPORT|PAYLOAD> <value> | run | sessions");
   else if(c==="show")add(`i:${S.cat}/${S.mod}  RHOSTS=${S.host}  LPORT=${S.port}  PAYLOAD=${S.pay}`);
@@ -288,7 +288,7 @@ function msfInit(w){
  w.b.onclick=e=>{const a=e.target.dataset.a;if(a==="go")run();else if(a==="st")stop();else if(a==="cl"){o.innerHTML="";bar.style.width="0"}
   else if(a==="rs"){stop();cycle=0;Object.assign(S,{cat:"exploit",mod:MOD.exploit[0],pay:PAY[0],host:SC["Corp LAN"][0].ip,port:"4444",ses:[]});o.innerHTML="";bar.style.width="0";st.textContent="IDLE";st.className="stt";sync();ses()}
   else if(a==="k"){S.ses=S.ses.filter(x=>x.id!==+e.target.dataset.i);save();ses()}};
- w.close=()=>clearInterval(iv);w.foc=()=>q(".tp input",w.b)?.focus();sync();ses();add("i:Syntax Metasploit-style console (SIMULATED). Type 'help'.")}
+ w.close=()=>clearTimeout(iv);w.foc=()=>q(".tp input",w.b)?.focus();sync();ses();add("i:Syntax Metasploit-style console (SIMULATED). Type 'help'.")}
 /* ---------- boot + tick + entry ---------- */
 function boot(done){
  const b=el('<div id="bt"><pre></pre><div class="bar"><i></i></div><button>Skip boot animation</button></div>',hos),pre=q("pre",b),bar=q("i",b);

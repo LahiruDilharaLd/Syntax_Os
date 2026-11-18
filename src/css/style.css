@@ -126,3 +126,15 @@ body:not(.locked) #login{display:none}
 .card small{display:block;margin-top:10px;color:var(--dim);font-size:11px}
 .card.shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* Fingerprint reader styling and compact landscape layout */
+@media(max-height:600px) and (orientation:landscape){
+ #console{grid-template-rows:auto minmax(0,1fr) 0;padding:5px;gap:5px}
+ header{max-height:29dvh;overflow:hidden;gap:5px;padding:5px}
+ main{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));grid-template-areas:"map log local" "tele pkt ops";gap:5px}
+ .panel{padding:5px}
+}
+.finger-button{width:176px;height:176px;min-height:0;display:grid;place-items:center;margin:8px auto 4px;padding:8px;border:2px solid var(--acc);border-radius:50%;background:radial-gradient(circle at 50% 48%,#062211 0,#020805 68%);box-shadow:0 0 0 7px rgba(57,255,136,.07),0 0 28px rgba(57,255,136,.2),inset 0 0 24px rgba(57,255,136,.12);transition:transform .15s,box-shadow .15s}
+.finger-button svg{width:150px;height:150px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.finger-button .scan-ring{stroke:var(--acc2);opacity:.52}.finger-button .outer{stroke-width:2.5;stroke-dasharray:130 18;transform-origin:60px 60px;animation:scan-rotate 12s linear infinite}.finger-button .middle{stroke-width:1.5;stroke-dasharray:4 4}.finger-button .inner{opacity:.35}.finger-button .finger-lines{stroke:var(--acc);stroke-width:2.2;filter:drop-shadow(0 0 2px var(--acc))}.finger-button .scan-dot{fill:var(--acc2);filter:drop-shadow(0 0 4px var(--acc2))}.finger-button:hover{transform:scale(1.035);box-shadow:0 0 0 8px rgba(57,255,136,.1),0 0 38px rgba(57,255,136,.36),inset 0 0 26px rgba(57,255,136,.18)}
+@keyframes scan-rotate{to{transform:rotate(360deg)}}
