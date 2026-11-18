@@ -156,7 +156,7 @@ function start(){
 
 /* ---------- controls ---------- */
 const con=$("console");
-async function fullscreen(){try{if(document.fullscreenElement){await document.exitFullscreen();document.body.classList.remove("immersive")}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();document.body.classList.remove("immersive")}else document.body.classList.toggle("immersive");if(screen.orientation?.lock&&document.fullscreenElement)screen.orientation.lock("landscape").catch(()=>{})}catch(e){document.body.classList.toggle("immersive")}const label=document.fullscreenElement||document.body.classList.contains("immersive")?"Exit fullscreen":"Fullscreen";$("fs").textContent=label;const envButton=$("hfs");if(envButton)envButton.textContent=label}
+async function fullscreen(){try{if(document.fullscreenElement){await document.exitFullscreen();document.body.classList.remove("immersive")}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();document.body.classList.remove("immersive")}else document.body.classList.toggle("immersive");}catch(e){document.body.classList.toggle("immersive")}const label=document.fullscreenElement||document.body.classList.contains("immersive")?"Exit fullscreen":"Fullscreen";$("fs").textContent=label;const envButton=$("hfs");if(envButton)envButton.textContent=label}
 function theme(){S.ti=(S.ti+1)%4;document.documentElement.dataset.theme=S.themes[S.ti]}
 function pause(){S.paused=!S.paused;$("badge").textContent=S.paused?"PAUSED":"ONLINE";$("pause").setAttribute("aria-pressed",S.paused);$("pause").textContent=S.paused?"Resume":"Pause"}
 function intensity(n){S.mult=[2.2,1,.35][n-1]}

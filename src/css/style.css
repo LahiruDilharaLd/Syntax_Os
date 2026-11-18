@@ -138,3 +138,12 @@ body:not(.locked) #login{display:none}
 .finger-button svg{width:150px;height:150px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .finger-button .scan-ring{stroke:var(--acc2);opacity:.52}.finger-button .outer{stroke-width:2.5;stroke-dasharray:130 18;transform-origin:60px 60px;animation:scan-rotate 12s linear infinite}.finger-button .middle{stroke-width:1.5;stroke-dasharray:4 4}.finger-button .inner{opacity:.35}.finger-button .finger-lines{stroke:var(--acc);stroke-width:2.2;filter:drop-shadow(0 0 2px var(--acc))}.finger-button .scan-dot{fill:var(--acc2);filter:drop-shadow(0 0 4px var(--acc2))}.finger-button:hover{transform:scale(1.035);box-shadow:0 0 0 8px rgba(57,255,136,.1),0 0 38px rgba(57,255,136,.36),inset 0 0 26px rgba(57,255,136,.18)}
 @keyframes scan-rotate{to{transform:rotate(360deg)}}
+
+/* Updated fingerprint key to match the supplied rounded-square reader reference */
+.finger-button{position:relative;width:190px;height:190px;border-radius:30px;border:2px solid #36d9ff;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#073020 0,#03131b 58%,#020812 100%);box-shadow:0 0 0 3px rgba(54,217,255,.12),0 0 24px rgba(0,229,255,.3),0 0 34px rgba(57,255,136,.2),inset 0 0 24px rgba(0,229,255,.12)}
+.finger-button::before{content:"";position:absolute;z-index:2;left:-8%;right:-8%;top:50%;height:2px;background:#8effc5;box-shadow:0 0 6px 2px #35ff9a,0 0 18px 5px #00e5ff;animation:fingerprint-scan 2.8s ease-in-out infinite alternate}
+.finger-button svg{width:154px;height:154px;z-index:1}
+.finger-button .scan-ring,.finger-button .scan-dot{display:none}
+.finger-button .finger-lines{stroke:#6fffc5;stroke-width:2.5;filter:drop-shadow(0 0 3px #16ff9a) drop-shadow(0 0 7px #00e5ff)}
+.finger-button:hover{border-color:#74ffc1;box-shadow:0 0 0 4px rgba(54,217,255,.16),0 0 30px rgba(0,229,255,.4),0 0 42px rgba(57,255,136,.27),inset 0 0 28px rgba(0,229,255,.18)}
+@keyframes fingerprint-scan{from{transform:translateY(-58px)}to{transform:translateY(58px)}}
