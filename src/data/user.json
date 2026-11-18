@@ -1,0 +1,11 @@
+{
+  "_note": "Username/password are legacy MD5 hashes (hex). passkey.id is a WebAuthn credential ID and passkey.publicKey is an SPKI public key, both base64url. Never store fingerprint data here.",
+  "users": [
+    {
+      "display": "<Syntax>",
+      "username": "92e9d6227d5534e7afc27a11179c808e",
+      "password": "8cb280133473836bab8732854e89d86e",
+      "passkey": null
+    }
+  ]
+}

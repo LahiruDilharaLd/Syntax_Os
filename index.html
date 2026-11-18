@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hacker Simulator – Fake Cyber Ops Console | Free, Fullscreen, No Typing</title>
+<meta name="description" content="Free hacker simulator: a self-running fake cyber ops console with event log, packet stream, radar network map and telemetry. Fullscreen prank, stream backdrop and film prop. Entertainment only.">
+<meta name="theme-color" content="#05080a">
+<meta name="author" content="&lt;Syntax/&gt;">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hacker Simulator – Fake Cyber Ops Console">
+<meta property="og:description" content="A hands-free fake cyber ops console for pranks, streams, classrooms and film props. Nothing is real.">
+<meta property="og:url" content="https://YOUR-USERNAME.github.io/hacker-simulator/">
+<meta property="og:image" content="https://YOUR-USERNAME.github.io/hacker-simulator/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","author":{"@type":"Person","name":"\u003cSyntax/\u003e"},"mainEntity":[
+{"@type":"Question","name":"Is it real?","acceptedAnswer":{"@type":"Answer","text":"No. Nothing is scanned, hacked or connected. All remote data is fictional. Only the Local System panel shows real facts your browser already knows."}},
+{"@type":"Question","name":"Does it work on mobile?","acceptedAnswer":{"@type":"Answer","text":"Yes. On small screens the panels stack and the less important ones are hidden so the map and log stay readable."}},
+{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. It is one static HTML file with no account, no download and no tracking."}},
+{"@type":"Question","name":"How do I go fullscreen?","acceptedAnswer":{"@type":"Answer","text":"Press F or click the Fullscreen button. Press Esc to exit."}}]}
+</script>
+<link rel="icon" href="src/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="src/css/style.css">
+<link rel="stylesheet" href="src/css/os.css">
+
+</head>
+<body class="locked">
+<!-- LOGIN GATE: password fallback and device passkeys are configured in src/data/user.json -->
+<div id="login" role="dialog" aria-labelledby="lt">
+ <form class="card" id="lf" autocomplete="off">
+  <h2 id="lt">&lt;Syntax&gt; // AUTH</h2>
+  <p class="sub">Operator sign in required</p>
+  <div class="auth-tabs" role="tablist" aria-label="Sign in method"><button id="finger-tab" type="button" class="selected" role="tab" aria-selected="true">⌁ FINGERPRINT</button><button id="password-tab" type="button" role="tab" aria-selected="false">PASSWORD</button></div>
+  <section id="finger-panel" role="tabpanel"><button id="finger-login" type="button" class="finger-button"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5a15 15 0 0 0-15 15m30 0a15 15 0 0 0-30 0m22 0a7 7 0 0 0-14 0c0 12-2 19-6 24m14-24c0 14-1 22-4 27m11-27c0 10-1 17-3 22M5 22c0 8-1 14-3 18m44-18c0 6-1 11-2 15"/></svg><span>SCAN FINGERPRINT</span></button><p class="auth-hint">Use your device fingerprint, face unlock, or screen lock.</p></section>
+  <section id="password-panel" role="tabpanel" hidden><label for="lp">Password</label><input id="lp" name="p" type="password" autocomplete="current-password"><button type="submit">LOG IN</button></section>
+  <button id="setup-fingerprint" type="button" class="setup-button" hidden>SET UP THIS DEVICE</button>
+  <div id="lmsg" role="alert"></div>
+  <small>Username: &lt;Syntax&gt;. Device biometrics stay with your browser.</small>
+ </form>
+</div>
+<audio id="bgm" src="src/audio/default.mp3" loop preload="auto"></audio>
+
+<section id="console" aria-label="Fake cyber ops console">
+ <header>
+  <b class="brand">&lt;Syntax/&gt;</b><span class="badge" id="badge">ONLINE</span>
+  <span><span class="k">SESSION </span><span class="v" id="timer">00:00:00</span></span>
+  <span><span class="k">LOCAL TIME </span><time class="v" id="localclock">--:--:--</time></span>
+  <span><span class="k">TARGET NETWORK </span><span class="v" id="target">--</span></span>
+  <span><span class="k">OPERATOR </span><span class="v" id="op">&lt;Syntax&gt;</span></span>
+  <span class="sp"></span>
+  <button id="osbtn" title="Open the simulated hacker OS">HACKING ENVIRONMENT</button>
+  <button id="pause" aria-pressed="false" title="Pause simulation (P)">Pause</button>
+  <label class="toolbar-control" for="speed">Intensity</label><select id="speed" title="Simulation intensity"><option value="1">Calm</option><option value="2" selected>Normal</option><option value="3">Chaos</option></select>
+  <button id="export" title="Download simulated event log">Export log</button>
+  <button id="mus" aria-pressed="true" title="Music on/off (M)">Music</button>
+  <button id="snd" aria-pressed="false" title="Beeps (off by default)">Beeps</button>
+  <button id="thm" title="Theme (T)">Theme</button>
+  <button id="fs" title="Fullscreen (F)">Fullscreen</button>
+  <button id="out" title="Log out">Logout</button>
+ </header>
+ <main>
+  <section class="panel" id="log"><h2>EVENT LOG <i>SIMULATED</i></h2><div class="feed" id="logf" aria-live="off"></div></section>
+  <section class="panel" id="map"><h2>NETWORK MAP <i>SIMULATED</i></h2><canvas id="radar"></canvas>
+   <div class="cnt"><span>NODES <b id="cN">0</b></span><span>LINK <b id="cL">0</b></span><span>SCAN <b id="cS">0</b></span><span>FLAGGED <b id="cF">0</b></span></div></section>
+  <section class="panel" id="local"><h2>LOCAL SYSTEM <i>REAL – read from your browser</i></h2><dl id="sys"></dl></section>
+  <section class="panel" id="tele"><h2>REMOTE TELEMETRY <i>SIMULATED</i></h2><div id="gs"></div></section>
+  <section class="panel" id="pkt"><h2>PACKET STREAM <i>SIMULATED</i></h2><div class="feed" id="pktf"></div><canvas id="pktg"></canvas></section>
+  <section class="panel" id="ops"><h2>ACTIVE OPERATIONS <i>SIMULATED</i></h2><div id="jobs"></div></section>
+ </main>
+ <footer class="cf">Entertainment only. Nothing is scanned, hacked or connected. Remote data is fictional. &nbsp;by &lt;Syntax/&gt; &nbsp;[F] fullscreen [P] pause [1-3] intensity [T] theme [H] header</footer>
+ <div id="banner"></div>
+ <div id="boot"></div>
+</section>
+
+<article>
+ <h1>Hacker Simulator – Fake Cyber Ops Console</h1>
+ <p>CyberOps is a free, hands-free fake hacking console that runs in your browser. It fills the screen with a scrolling event log, a packet stream, a radar-style network map, telemetry gauges and a set of active operations. You never have to type. Press F and let it run.</p>
+ <h2>Uses</h2>
+ <ul><li><b>Prank:</b> leave it fullscreen on a shared laptop, then reveal the joke.</li>
+ <li><b>Streaming:</b> a busy command-center backdrop behind your webcam.</li>
+ <li><b>Classroom demo:</b> show what a movie-style hacker screen looks like, and talk about what a browser can really see.</li>
+ <li><b>Film prop:</b> a looping monitor for cyberpunk scenes, booths and events.</li></ul>
+ <h2>How it differs from a typing-style hacker prank</h2>
+ <p>Typing-style pranks print code only while someone presses keys. CyberOps runs on its own as a multi-panel console, with logs, a map and jobs all moving at once. It looks like a team at work, not one person mashing a keyboard.</p>
+ <h2>Features</h2>
+ <ul><li>Six live panels, all drawn locally with HTML, CSS and canvas</li><li>Four themes: green, amber, blue, red</li><li>Calm, normal and chaos intensity</li><li>Random alerts and "ACCESS GRANTED" banners every 20–40 seconds</li><li>Optional soft beeps (off by default)</li><li>Pauses when the tab is hidden</li><li>Real local facts, clearly labeled; all remote data fake</li><li>No tracking, no network requests</li></ul>
+ <h2>FAQ</h2>
+ <h3>Is it real?</h3><p>No. Nothing is scanned, hacked or connected. All remote data is fictional. Only the Local System panel shows real facts your browser already knows.</p>
+ <h3>Does it work on mobile?</h3><p>Yes. Panels stack, and the map and log stay visible while the rest is hidden.</p>
+ <h3>Is it free?</h3><p>Yes. It is one static HTML file with no account and no download.</p>
+ <h3>How do I go fullscreen?</h3><p>Press F or click Fullscreen. Press Esc to exit.</p>
+</article>
+<footer class="site"><p>Made by <b>&lt;Syntax/&gt;</b></p><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a><p>Entertainment only. Nothing is scanned, hacked or connected. Remote data is fictional.</p><p>&copy; 2026 &lt;Syntax/&gt;</p></footer>
+
+<script src="src/js/md5.js"></script>
+<script src="src/js/app.js"></script>
+<script src="src/js/auth.js"></script>
+<script src="src/js/os.js"></script>
+</body>
+</html>
