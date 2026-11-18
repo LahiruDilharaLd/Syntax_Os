@@ -2,12 +2,13 @@
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id), form=$("lf"), msg=$("lmsg"), bgm=$("bgm"), mus=$("mus");
-let users=[],fails=0,lockUntil=0,wasPlaying=false;
+let users=[],fails=0,lockUntil=0,wasPlaying=false,musicCtx=null,synthTimer=null,musicEnabled=true,noteIndex=0;
+const track=$("music-track");track.value=localStorage.getItem("syntax:music-track")||"default";
 const enc=new TextEncoder(), dec=new TextDecoder();
 const b64u=b=>{let s="";new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")};
 const un64=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4)),c=>c.charCodeAt(0));
 const rand=n=>crypto.getRandomValues(new Uint8Array(n));
-fetch("src/data/user.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{users=j.users||[];if(!users.some(u=>u.passkey))$("setup-fingerprint").hidden=false})
+fetch("src/data/user.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{users=j.users||[];if(!users.some(u=>u.passkey)&&location.hash==="#setup")$("setup-fingerprint").hidden=false})
  .catch(()=>msg.textContent="Cannot load user.json. Serve this folder over HTTPS or localhost.");
 function tab(which){const fp=which==="finger";$("finger-panel").hidden=!fp;$("password-panel").hidden=fp;$("finger-tab").classList.toggle("selected",fp);$("password-tab").classList.toggle("selected",!fp);$("finger-tab").setAttribute("aria-selected",fp);$("password-tab").setAttribute("aria-selected",!fp);msg.textContent=""}
 $("finger-tab").onclick=()=>tab("finger");$("password-tab").onclick=()=>tab("password");
@@ -34,9 +35,14 @@ $("finger-login").onclick=async()=>{try{allowed();const user=users.find(u=>u.pas
 function equal(a,b){return a.length===b.length&&a.every((v,i)=>v===b[i])}
 function derToRaw(d){if(d[0]!==0x30)throw Error("Unsupported passkey signature.");let i=2;if(d[i++]!==2)throw Error("Unsupported passkey signature.");let rl=d[i++],r=d.slice(i,i+rl);i+=rl;if(d[i++]!==2)throw Error("Unsupported passkey signature.");let sl=d[i++],s=d.slice(i,i+sl);const out=new Uint8Array(64);r=r[0]===0?r.slice(1):r;s=s[0]===0?s.slice(1):s;if(r.length>32||s.length>32)throw Error("Unsupported passkey signature.");out.set(r,32-r.length);out.set(s,64-s.length);return out}
 function ok(user){$("op").textContent="<Syntax>";document.body.classList.remove("locked");$("lp").value="";playMusic();window.CyberOps.start()}
-function bad(text="Access denied. Verification failed."){fails++;msg.textContent=text;form.classList.remove("shake");void form.offsetWidth;form.classList.add("shake");if(fails>=5){lockUntil=Date.now()+30000;fails=0;msg.textContent="Too many attempts. Locked for 30 seconds."}$("lp").value=""}
-function playMusic(){bgm.volume=.5;bgm.play().then(()=>setMus(true)).catch(()=>setMus(false))}function setMus(on){mus.setAttribute("aria-pressed",on);mus.textContent=on?"Music":"Music off"}function toggleMusic(){bgm.paused?playMusic():(bgm.pause(),setMus(false))}mus.onclick=toggleMusic;
+function bad(){fails++;msg.innerHTML="Restricted Access - <strong>If you're not &lt;Syntax&gt;, you're not getting in.</strong>";form.classList.remove("shake");void form.offsetWidth;form.classList.add("shake");if(fails>=5){lockUntil=Date.now()+30000;fails=0}$("lp").value=""}
+function stopSynth(){clearInterval(synthTimer);synthTimer=null}
+function startSynth(){stopSynth();musicCtx=musicCtx||new(window.AudioContext||window.webkitAudioContext)();musicCtx.resume();noteIndex=0;const scales={pulse:[110,146.83,164.81,220],drone:[55,82.41,110],arpeggio:[220,261.63,329.63,392,329.63,261.63]};const seq=scales[track.value]||scales.pulse;synthTimer=setInterval(()=>{const t=musicCtx.currentTime,osc=musicCtx.createOscillator(),gain=musicCtx.createGain();osc.type=track.value==="drone"?"sine":"triangle";osc.frequency.value=seq[noteIndex++%seq.length];gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(track.value==="drone"?0.045:0.035,t+.06);gain.gain.exponentialRampToValueAtTime(.0001,t+(track.value==="drone"?1.6:.45));osc.connect(gain);gain.connect(musicCtx.destination);osc.start(t);osc.stop(t+(track.value==="drone"?1.65:.5))},track.value==="drone"?1200:track.value==="arpeggio"?240:420)}
+function playMusic(){musicEnabled=true;if(track.value==="default"){stopSynth();bgm.volume=.5;bgm.play().then(()=>setMus(true)).catch(()=>setMus(false))}else{bgm.pause();startSynth();setMus(true)}}
+function setMus(on){mus.setAttribute("aria-pressed",on);mus.textContent=on?"Music":"Music off"}
+function toggleMusic(){if(musicEnabled){musicEnabled=false;bgm.pause();stopSynth();setMus(false)}else playMusic()}
+track.onchange=()=>{localStorage.setItem("syntax:music-track",track.value);if(musicEnabled)playMusic()};mus.onclick=toggleMusic;
 addEventListener("keydown",e=>{if(e.key.toLowerCase()==="m"&&!e.ctrlKey&&!e.metaKey&&!document.body.classList.contains("locked")&&!/INPUT/.test(e.target.tagName))toggleMusic()});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){wasPlaying=!bgm.paused;bgm.pause()}else if(wasPlaying)bgm.play().catch(()=>{})});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){wasPlaying=musicEnabled;bgm.pause();stopSynth()}else if(wasPlaying)playMusic()});
 $("out").onclick=()=>{bgm.pause();location.reload()};
 })();

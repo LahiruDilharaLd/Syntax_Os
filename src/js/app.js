@@ -136,7 +136,7 @@ function event(){
 
 /* ---------- boot sequence (typewriter ~3 s) ---------- */
 function boot(){
- const lines=["CYBEROPS kernel 4.2 // entertainment build","mounting virtual interfaces ........ OK","loading fake exploit modules ........ OK","calibrating radar array ............. OK","seeding random fiction .............. OK","operator: <Syntax/>","NOTHING IS REAL. ENJOY THE SHOW.","starting console..."];
+ const lines=["CYBEROPS kernel 4.2","mounting virtual interfaces ........ OK","loading security modules ........... OK","calibrating radar array ............. OK","synchronizing event stream .......... OK","operator: <Syntax>","starting console..."];
  const b=$("boot");let li=0,ci=0;
  const iv=setInterval(()=>{
   if(li>=lines.length){clearInterval(iv);setTimeout(start,250);return}
@@ -156,13 +156,14 @@ function start(){
 
 /* ---------- controls ---------- */
 const con=$("console");
-function fullscreen(){document.fullscreenElement?document.exitFullscreen():con.requestFullscreen?.()}
+async function fullscreen(){try{if(document.fullscreenElement){await document.exitFullscreen();document.body.classList.remove("immersive")}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();document.body.classList.remove("immersive")}else document.body.classList.toggle("immersive");if(screen.orientation?.lock&&document.fullscreenElement)screen.orientation.lock("landscape").catch(()=>{})}catch(e){document.body.classList.toggle("immersive")}const label=document.fullscreenElement||document.body.classList.contains("immersive")?"Exit fullscreen":"Fullscreen";$("fs").textContent=label;const envButton=$("hfs");if(envButton)envButton.textContent=label}
 function theme(){S.ti=(S.ti+1)%4;document.documentElement.dataset.theme=S.themes[S.ti]}
 function pause(){S.paused=!S.paused;$("badge").textContent=S.paused?"PAUSED":"ONLINE";$("pause").setAttribute("aria-pressed",S.paused);$("pause").textContent=S.paused?"Resume":"Pause"}
 function intensity(n){S.mult=[2.2,1,.35][n-1]}
 $("fs").onclick=fullscreen;$("thm").onclick=theme;$("pause").onclick=pause;$("speed").onchange=e=>intensity(+e.target.value);$("export").onclick=()=>{const rows=[...logf.children].map(x=>x.innerText);const blob=new Blob(["CYBEROPS SIMULATION LOG (fictional)"+String.fromCharCode(10)+rows.join(String.fromCharCode(10))],{type:"text/plain"});const a=document.createElement("a"),u=URL.createObjectURL(blob);a.href=u;a.download="cyberops-simulated-log-"+new Date().toISOString().replace(/[:.]/g,"-")+".txt";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 $("snd").onclick=e=>{S.sound=!S.sound;e.target.setAttribute("aria-pressed",S.sound);beep(900)};
 addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&document.body.classList.contains("immersive")){document.body.classList.remove("immersive");$("fs").textContent="Fullscreen";const envButton=$("hfs");if(envButton)envButton.textContent="Fullscreen";return}
  if(document.body.classList.contains("locked")||/INPUT|TEXTAREA/.test(e.target.tagName))return;
  if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
  if(k=="f")fullscreen();else if(k=="p")pause();else if(k=="t")theme();else if(k=="h")document.body.classList.toggle("nohead");
@@ -171,6 +172,7 @@ addEventListener("keydown",e=>{
 // hide cursor after 3 s of inactivity while fullscreen
 let ct;addEventListener("mousemove",()=>{document.body.classList.remove("nocursor");clearTimeout(ct);
  if(document.fullscreenElement)ct=setTimeout(()=>document.body.classList.add("nocursor"),3000)});
+document.addEventListener("fullscreenchange",()=>{document.body.classList.remove("nocursor");if(!document.fullscreenElement)document.body.classList.remove("immersive");const label=document.fullscreenElement||document.body.classList.contains("immersive")?"Exit fullscreen":"Fullscreen";$("fs").textContent=label;const envButton=$("hfs");if(envButton)envButton.textContent=label});
 // pause everything when tab hidden
 let wasP=false;document.addEventListener("visibilitychange",()=>{if(document.hidden){wasP=S.paused;S.paused=true}else{S.paused=wasP}});
 setInterval(()=>{const d=new Date();$("localclock").textContent=pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());if(!S.paused&&S.booted){const s=Math.floor((Date.now()-S.t0)/1000);$("timer").textContent=pad(s/3600|0)+":"+pad(s/60%60|0)+":"+pad(s%60)}},500);
@@ -181,5 +183,5 @@ function resize(){fit(rc);fit(pg);G.forEach((_,i)=>fit($("sp"+i)));sys()}
 addEventListener("resize",resize);
 (function frame(){if(S.booted){radar();drawThr()}requestAnimationFrame(frame)})();
 resize();
-window.CyberOps={start(){resize();boot()}}; // called by auth.js after a successful login
+window.CyberOps={start(){resize();boot()},toggleFullscreen:fullscreen}; // called by auth.js after a successful login
 })();

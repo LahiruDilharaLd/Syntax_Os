@@ -6,7 +6,7 @@ const clk=()=>{const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes(
 const el=(h,p)=>{const d=document.createElement("div");d.innerHTML=h.trim();const n=d.firstChild;p&&p.appendChild(n);return n};
 const PL=s=>{const m=/^([iowe]):(.*)$/.exec(s);return m?[{i:"INFO",o:"OK",w:"WARN",e:"ALERT"}[m[1]],m[2]]:["",s]};
 /* ---------- persistence ---------- */
-const KEY="syntaxos:v1",DEF={set:{boot:true,note:true,theme:""},hist:[],cfg:{},sims:[],fs:null,win:{},open:[]};
+const KEY="syntaxos:v1",DEF={set:{boot:true,note:true,theme:"",keyboard:true},hist:[],cfg:{},sims:[],fs:null,win:{},open:[]};
 let D;try{D=Object.assign({},JSON.parse(JSON.stringify(DEF)),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){D=JSON.parse(JSON.stringify(DEF))}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}};
 const sim=(n,tg,s)=>{D.sims.push({t:Date.now(),n,tg,s});D.sims=D.sims.slice(-40);save()};
@@ -38,7 +38,11 @@ const T=[
 {id:"beef",n:"BeEF",d:"Browser Security Simulation",ic:"✇",o:["Scenario",["Demo page","Training lab"]],f:["Browser name","demo-browser"],s:["i:Browser security simulation (SIMULATED) {o}","o:Fictional browser online: {f}-1","w:Policy check: mixed content warning (sample)","o:Report: 2 findings on training page"]},
 {id:"netcat",n:"Netcat",d:"Network Utility Simulator",ic:"⌨",o:["Mode",["listen","connect"]],f:["Port","4444"],s:["i:netcat (SIMULATED local loopback) {o} on port {f}","o:sim-socket://{t}:{f} ready","i:< hello from simulated peer","i:> ack","o:Connection closed"]},
 {id:"gobuster",n:"Gobuster",d:"Directory and DNS Discovery Simulator",ic:"⌘",o:["Mode",["dir","dns"]],f:["Wordlist","fictional-common.txt"],s:["i:Gobuster (SIMULATED) mode {o} {t}","o:/admin (Status: 302)","o:/images (Status: 301)","w:/backup (Status: 403)","o:Finished: 3 entries"]},
-{id:"responder",n:"Responder",d:"Network Poisoning Simulation (events only)",ic:"☢",o:["Mode",["Analyze only","Event log"]],f:["Interface","eth0-sim"],s:["i:Name-resolution event SIMULATION ({o}) on {f}","w:[sim] LLMNR query for 'fileshare' from {i}","w:[sim] NBT-NS query for 'printer' from {i}","o:{n} fictional events logged, no traffic touched"]}];
+{id:"responder",n:"Responder",d:"Name-resolution event analysis",ic:"☢",o:["Mode",["Analyze only","Event log"]],f:["Interface","eth0-sim"],s:["i:Name-resolution event stream ({o}) on {f}","w:LLMNR query for 'fileshare' from {i}","w:NBT-NS query for 'printer' from {i}","o:{n} events logged"]},
+{id:"zeek",n:"Zeek",d:"Protocol and connection analysis",ic:"⌁",o:["Log",["conn.log","dns.log","http.log"]],f:["Interface","eth0-sim"],s:["i:Loading {o} event stream from {f}","o:{n} connections summarized","i:DNS query host{p}.lab.invalid -> 203.0.113.{n}","w:Unusual connection duration on {i}","o:Session records refreshed"]},
+{id:"suricata",n:"Suricata",d:"Rule based alert monitor",ic:"◉",o:["Rule set",["Balanced","Performance","Threat focused"]],f:["Interface","eth0-sim"],s:["i:Starting alert monitor with {o} rules","o:Flow {n} established: {i} -> {t}","w:Rule ET-SAMPLE-{p} threshold event","i:Alert counters updated","o:Monitor cycle complete"]},
+{id:"yara",n:"YARA",d:"Pattern matching on sample files",ic:"⌗",o:["Rule pack",["malware-demo","webshell-demo","credential-demo"]],f:["Sample path","/samples/demo.bin"],s:["i:Loading rule pack {o}","i:Reading inert sample {f}","w:Rule SAMPLE_{n} matched a demo marker","o:Scan summary refreshed","i:Watching sample directory"]},
+{id:"osquery",n:"osquery",d:"Endpoint query monitor",ic:"▤",o:["Query group",["processes","network","packages"]],f:["Interval","5s"],s:["i:Query group {o} scheduled every {f}","o:Returned {n} fictional rows","i:Process snapshot updated","w:New sample event from syntax-system","o:Monitor cycle complete"]}];
 const CORE=[{id:"term",n:"Terminal",d:"Shell emulator",ic:">_"},{id:"files",n:"File Manager",d:"Virtual files",ic:"▤"},{id:"proc",n:"Processes",d:"Process manager",ic:"▦"},{id:"net",n:"Network Monitor",d:"Live traffic graph",ic:"⇅"},{id:"sys",n:"System Info",d:"About this OS",ic:"ⓘ"},{id:"apps",n:"Tool Library",d:"All apps and tools",ic:"▣"},{id:"set",n:"Settings",d:"Preferences",ic:"✱"}];
 const ALL=CORE.concat(T);
 function expand(A,c){const hs=SC[c.sc]||SC["Corp LAN"],pw=HASH[c.f],v={t:c.t,o:c.o,f:c.f,pw:pw||"NOT FOUND",nh:hs.length},o=[];
@@ -46,7 +50,7 @@ function expand(A,c){const hs=SC[c.sc]||SC["Corp LAN"],pw=HASH[c.f],v={t:c.t,o:c
  else o.push(l.replace(/\{(\w+)\}/g,(m,k)=>k==="n"?R(900)+100:k==="p"?P([22,80,443,445,8080]):k==="i"?P(hs).ip:v[k]!==undefined?v[k]:m))});return o}
 const gen=(d,c)=>d.h&&!HASH[c.f]?expand(d.s.slice(0,2),c).concat(["w:Wordlist exhausted","e:Status: EXHAUSTED - no match (sample hashes only)"]):expand(d.s,c);
 const resL=(d,c)=>expand(d.h&&!HASH[c.f]?["No password recovered (sample hashes only)"]:(d.r||d.s.slice(-2)),c).map(s=>PL(s)[1]);
-const TA={nmap:"nmap","aircrack-ng":"aircrack",john:"john",hashcat:"hashcat",sqlmap:"sqlmap",hydra:"hydra",medusa:"medusa",nikto:"nikto",ettercap:"ettercap",maltego:"maltego",autopsy:"autopsy",reaver:"reaver",kismet:"kismet",beef:"beef",netcat:"netcat",nc:"netcat",gobuster:"gobuster",responder:"responder",burpsuite:"burp"};
+const TA={nmap:"nmap","aircrack-ng":"aircrack",john:"john",hashcat:"hashcat",sqlmap:"sqlmap",hydra:"hydra",medusa:"medusa",nikto:"nikto",ettercap:"ettercap",maltego:"maltego",autopsy:"autopsy",reaver:"reaver",kismet:"kismet",beef:"beef",netcat:"netcat",nc:"netcat",gobuster:"gobuster",responder:"responder",burpsuite:"burp",zeek:"zeek",suricata:"suricata",yara:"yara",osquery:"osquery"};
 const toolCmd=(id,a)=>{const d=T.find(x=>x.id===id),c={sc:"Corp LAN",t:a[0]||SC["Corp LAN"][0].ip,o:d.o[1][0],f:d.f[1]};if(d.h&&a[0])c.f=a[0];return gen(d,c).concat(["i:-- results --"],resL(d,c))};
 /* ---------- virtual file system ---------- */
 const dir=c=>({c,m:Date.now()-R(8e8)}),fl=t=>({t,m:Date.now()-R(8e8)});
@@ -65,7 +69,9 @@ const mkc=()=>({d:P(["IN","OUT"]),l:AIP()+":"+(1024+R(60000)),r:AIP()+":"+P([22,
 for(let i=0;i<9;i++)CONN.push(mkc());
 const IPL=()=>["1: lo: <LOOPBACK,UP> mtu 65536","    inet 127.0.0.1/8","2: eth0: <BROADCAST,MULTICAST,UP> mtu 1500","    inet 10.13.37.100/24 brd 10.13.37.255","    link/ether 02:5e:11:a0:00:64","3: wlan0: <BROADCAST,MULTICAST> state DOWN (simulated)"];
 /* ---------- shell + desktop ---------- */
-const hos=el('<div id="hos"><div class="hb"><b class="brand">&lt;Syntax/&gt; OS</b><span class="badge">SIMULATION</span><button data-o="apps">☰ APPS</button><button data-n="term">+ TERMINAL</button><span class="sp"></span><span class="k">UP</span><span class="v" id="hup">00:00:00</span><time class="v" id="hclk"></time><button id="hback">◀ DASHBOARD</button></div><div id="dk"><div id="di"></div></div><div id="tb"></div><div id="nts"></div></div>',document.body);
+const hos=el('<div id="hos"><div class="hb"><b class="brand">&lt;Syntax/&gt; OS</b><span class="badge">SYSTEM</span><button data-o="apps">☰ APPS</button><button data-n="term">+ TERMINAL</button><span class="sp"></span><button id="kbauto" type="button" aria-pressed="true">MOBILE KEYBOARD: ON</button><button id="hfs" type="button">Fullscreen</button><span class="k">UP</span><span class="v" id="hup">00:00:00</span><time class="v" id="hclk"></time><button id="hback">◀ DASHBOARD</button></div><div id="dk"><div id="di"></div></div><div id="tb"></div><div id="nts"></div></div>',document.body);
+const kb=q("#kbauto",hos),syncKeyboard=()=>{kb.setAttribute("aria-pressed",D.set.keyboard!==false);kb.textContent="MOBILE KEYBOARD: "+(D.set.keyboard!==false?"ON":"OFF")};syncKeyboard();kb.onclick=()=>{D.set.keyboard=D.set.keyboard===false;save();syncKeyboard()};
+q("#hfs",hos).textContent=document.fullscreenElement||document.body.classList.contains("immersive")?"Exit fullscreen":"Fullscreen";
 const dk=q("#dk",hos),tb=q("#tb",hos);
 q("#di",hos).innerHTML=["term","files","proc","net","sys","apps","wire","msf","set"].map(id=>{const a=ALL.find(x=>x.id===id);return`<button class="ic" data-o="${id}"><b>${a.ic}</b><span>${esc(a.n)}</span></button>`}).join("");
 const wp=el('<canvas id="wp"></canvas>');dk.prepend(wp);
@@ -81,7 +87,7 @@ const place=w=>{const s=w.e.style,g=w.g;if(g.max){s.left=s.top="0";s.width=s.hei
 const persist=w=>{clearTimeout(w.pt);w.pt=setTimeout(()=>{D.win[w.id]={x:w.g.x,y:w.g.y,w:w.g.w,h:w.g.h,max:!!w.g.max};save()},250)};
 const sync=()=>{D.open=Object.keys(WS);save()};
 function renderTB(){tb.innerHTML=Object.values(WS).map(w=>`<button data-w="${esc(w.id)}" aria-pressed="${!w.min&&w===act}">${w.a.ic} ${esc(w.a.t)}</button>`).join("")||'<span class="k">No open windows</span>'}
-function focus(w){act=w;w.e.style.zIndex=++zi;renderTB();w.foc&&w.foc()}
+function focus(w){act=w;w.e.style.zIndex=++zi;renderTB();if(D.set.keyboard!==false)w.foc&&w.foc()}
 function toggleMin(w){w.min=!w.min;w.e.classList.toggle("min",w.min);if(w.min){if(act===w)act=null;renderTB()}else focus(w)}
 function closeWin(w){w.close&&w.close();w.e.remove();delete WS[w.id];if(act===w)act=null;renderTB();sync()}
 function openApp(key){
@@ -101,7 +107,7 @@ const launch=id=>openApp(T.find(x=>x.id===id&&!x.x)?"tool:"+id:id);
 hos.onclick=e=>{const b=e.target.closest("button");if(!b)return;
  if(b.dataset.o)launch(b.dataset.o);else if(b.dataset.n)openApp(b.dataset.n);
  else if(b.dataset.w){const w=WS[b.dataset.w];w&&(w.min||act===w?toggleMin(w):focus(w))}
- else if(b.id==="hback")hos.classList.remove("on")};
+ else if(b.id==="hfs")window.CyberOps?.toggleFullscreen();else if(b.id==="hback")hos.classList.remove("on")};
 hos.addEventListener("keydown",e=>e.stopPropagation());
 /* ---------- Terminal ---------- */
 AP.term={t:"Terminal",ic:">_",w:[640,380],multi:1,init:termInit};
@@ -137,7 +143,7 @@ function termInit(w){
   wireshark:()=>{openApp("wire");return["o:[*] Opening simulated Wireshark window..."]},
   exit:()=>{setTimeout(()=>closeWin(w),200);return["w:logout"]}};
  const run=async s=>{s=s.trim();if(!s)return;D.hist.push(s);D.hist=D.hist.slice(-100);save();hi=D.hist.length;const[c,...a]=s.split(/\s+/);
-  try{if(C[c])await out(await C[c](a));else if(TA[c])await out(toolCmd(TA[c],a));else line(c+": command not found","ALERT")}catch(e){line("error: "+e.message,"ALERT")}};
+  try{if(C[c])await out(await C[c](a));else if(TA[c])openApp("tool:"+TA[c]);else line(c+": command not found","ALERT")}catch(e){line("error: "+e.message,"ALERT")}};
  const comp=()=>{const v=inp.value,p=v.split(/\s+/),cur=last(p),L=p.length===1?Object.keys(C).concat(Object.keys(TA)):Object.keys((get(cwd)||{}).c||{}),m=L.filter(x=>x.startsWith(cur)).sort();
   if(m.length===1)inp.value=p.slice(0,-1).concat(m[0]).join(" ")+" ";else if(m.length>1){line(ps.textContent+" "+v);line(m.join("  "),"INFO")}};
  inp.onkeydown=e=>{
@@ -224,15 +230,15 @@ function toolInit(w){
  const d=T.find(x=>x.id===w.sub);w.a={t:d.n,ic:d.ic};q(".wh b",w.e).textContent=d.ic+" "+d.n;
  const c=D.cfg[d.id]=Object.assign({sc:"Corp LAN",t:SC["Corp LAN"][0].ip,o:d.o[1][0],f:d.f[1]},D.cfg[d.id]);
  w.b.innerHTML=`<div class="tl"><p class="ds">${esc(d.d)} - ${esc(d.n)} <i>SIMULATED</i></p><div class="cg"><label>Scenario<select data-k="sc">${Object.keys(SC).map(k=>`<option>${k}</option>`).join("")}</select></label><label>Target<input data-k="t"></label><label>${esc(d.o[0])}<select data-k="o">${d.o[1].map(v=>`<option>${esc(v)}</option>`).join("")}</select></label><label>${esc(d.f[0])}<input data-k="f"></label></div><div class="bt"><button data-a="go">Start</button><button data-a="st" disabled>Stop</button><button data-a="cl">Clear</button><button data-a="rs">Reset</button><em class="stt">IDLE</em></div><div class="bar"><i></i></div><div class="to"></div><div class="rp"></div></div>`;
- const bind=()=>w.b.querySelectorAll("[data-k]").forEach(e=>{e.value=c[e.dataset.k];e.onchange=e.oninput=()=>{c[e.dataset.k]=e.value;if(e.dataset.k==="sc"){c.t=SC[c.sc][0].ip;q("[data-k=t]",w.b).value=c.t}save()}});bind();
- let iv=null,L,i;const st=q(".stt",w.b),bar=q(".bar i",w.b),o=q(".to",w.b),rp=q(".rp",w.b),go=q("[data-a=go]",w.b),sp=q("[data-a=st]",w.b);
+ const bind=()=>w.b.querySelectorAll("[data-k]").forEach(e=>{e.value=c[e.dataset.k];e.onchange=e.oninput=()=>{c[e.dataset.k]=e.value;if(e.dataset.k==="sc"){c.t=SC[c.sc][0].ip;q("[data-k=t]",w.b).value=c.t}save()}});bind();w.foc=()=>q("[data-k=t]",w.b)?.focus();
+ let iv=null,L,i,cycle=0;const st=q(".stt",w.b),bar=q(".bar i",w.b),o=q(".to",w.b),rp=q(".rp",w.b),go=q("[data-a=go]",w.b),sp=q("[data-a=st]",w.b);
  const status=(t,k)=>{st.textContent=t;st.className="stt "+(k||"")};
  const end=(t,k)=>{clearInterval(iv);iv=null;go.disabled=false;sp.disabled=true;status(t,k)};
  w.close=()=>clearInterval(iv);
  w.b.onclick=e=>{const a=e.target.dataset.a;if(!a)return;
-  if(a==="go"&&!iv){o.innerHTML="";rp.textContent="";bar.style.width="0";L=gen(d,c);i=0;go.disabled=true;sp.disabled=false;status("RUNNING","WARN");
+  if(a==="go"&&!iv){o.innerHTML="";rp.textContent="";bar.style.width="0";L=gen(d,c);i=0;cycle=1;go.disabled=true;sp.disabled=false;status("RUNNING · CYCLE 1","WARN");
    iv=setInterval(()=>{if(i<L.length){const[k,t]=PL(L[i++]),n=document.createElement("div");if(k)n.className=k;n.textContent=t;o.appendChild(n);o.scrollTop=o.scrollHeight;bar.style.width=i/L.length*100+"%"}
-    else{const f=/^e:Status/.test(last(L));rp.textContent="RESULTS\n"+resL(d,c).join("\n");end(f?"FAILED":"COMPLETE",f?"ALERT":"OK");sim(d.n,c.t,f?"FAILED":"COMPLETE");note(d.n+": "+(f?"no match found":"simulation complete"))}},300)}
+    else{const f=/^e:Status/.test(last(L));rp.textContent="LATEST RESULTS\n"+resL(d,c).join("\n");if(cycle%10===0)sim(d.n,c.t,f?"FAILED":"CYCLE "+cycle);cycle++;L=gen(d,c);i=0;while(o.childNodes.length>500)o.firstChild.remove();bar.style.width="0";status("RUNNING · CYCLE "+cycle,f?"ALERT":"WARN")}},300)}
   else if(a==="st"&&iv){end("STOPPED","WARN");sim(d.n,c.t,"STOPPED")}
   else if(a==="cl"){o.innerHTML="";rp.textContent="";bar.style.width="0"}
   else if(a==="rs"){clearInterval(iv);iv=null;delete D.cfg[d.id];save();o.innerHTML="";rp.textContent="";bar.style.width="0";Object.assign(c,{sc:"Corp LAN",t:SC["Corp LAN"][0].ip,o:d.o[1][0],f:d.f[1]});bind();go.disabled=false;sp.disabled=true;status("IDLE")}}}
@@ -260,15 +266,16 @@ AP.msf={t:"Metasploit",ic:"☠",w:[700,520],init:msfInit};
 function msfInit(w){
  const MOD={exploit:["sim/ftp/demo_overflow","sim/http/demo_rce","sim/smb/demo_share"],auxiliary:["sim/scanner/demo_portscan","sim/gather/demo_banner"],post:["sim/post/demo_enum"]},PAY=["sim/demo_shell","sim/demo_meterpreter","sim/demo_beacon"];
  const S=D.cfg.msf=Object.assign({cat:"exploit",mod:MOD.exploit[0],pay:PAY[0],host:SC["Corp LAN"][0].ip,port:"4444",ses:[]},D.cfg.msf);
- w.b.innerHTML=`<div class="tl"><p class="ds">Fictional modules and payloads only - no real exploitation capability <i>SIMULATED</i></p><div class="cg"><label>Category<select data-k="cat">${Object.keys(MOD).map(k=>`<option>${k}</option>`).join("")}</select></label><label>Module<select data-k="mod"></select></label><label>Payload<select data-k="pay">${PAY.map(k=>`<option>${k}</option>`).join("")}</select></label><label>RHOSTS<input data-k="host"></label><label>LPORT<input data-k="port"></label></div><div class="bt"><button data-a="go">Run</button><button data-a="cl">Clear</button><button data-a="rs">Reset</button><em class="stt">IDLE</em></div><div class="bar"><i></i></div><div class="to"></div><div class="tp"><span class="ps">msf6 &gt;</span><input placeholder="help | show options | use &lt;module&gt; | set RHOSTS &lt;ip&gt; | run | sessions"></div><div class="rp"></div></div>`;
- const o=q(".to",w.b),bar=q(".bar i",w.b),st=q(".stt",w.b),rp=q(".rp",w.b),mod=q("[data-k=mod]",w.b);let iv=null;
+ w.b.innerHTML=`<div class="tl"><p class="ds">Fictional modules and payloads only - no real exploitation capability <i>SIMULATED</i></p><div class="cg"><label>Category<select data-k="cat">${Object.keys(MOD).map(k=>`<option>${k}</option>`).join("")}</select></label><label>Module<select data-k="mod"></select></label><label>Payload<select data-k="pay">${PAY.map(k=>`<option>${k}</option>`).join("")}</select></label><label>RHOSTS<input data-k="host"></label><label>LPORT<input data-k="port"></label></div><div class="bt"><button data-a="go">Run</button><button data-a="st" disabled>Stop</button><button data-a="cl">Clear</button><button data-a="rs">Reset</button><em class="stt">IDLE</em></div><div class="bar"><i></i></div><div class="to"></div><div class="tp"><span class="ps">msf6 &gt;</span><input placeholder="help | show options | use &lt;module&gt; | set RHOSTS &lt;ip&gt; | run | sessions"></div><div class="rp"></div></div>`;
+ const o=q(".to",w.b),bar=q(".bar i",w.b),st=q(".stt",w.b),rp=q(".rp",w.b),mod=q("[data-k=mod]",w.b),go=q("[data-a=go]",w.b),stopBtn=q("[data-a=st]",w.b);let iv=null,cycle=0;
  const add=t=>{const[k,x]=PL(t),d=document.createElement("div");if(k)d.className=k;d.textContent=x;o.appendChild(d);o.scrollTop=o.scrollHeight};
  const ses=()=>{rp.innerHTML="<b>SESSIONS</b> "+(S.ses.map(x=>`<div>#${x.id} ${esc(x.pay)} -> ${esc(x.host)} (${x.t}) <button data-a="k" data-i="${x.id}">Kill</button></div>`).join("")||"none")};
  const sync=()=>{if(!MOD[S.cat].includes(S.mod))S.mod=MOD[S.cat][0];mod.innerHTML=MOD[S.cat].map(m=>`<option>${m}</option>`).join("");mod.value=S.mod;w.b.querySelectorAll("[data-k]").forEach(e=>{if(e.dataset.k!=="mod")e.value=S[e.dataset.k]});save()};
  w.b.querySelectorAll("[data-k]").forEach(e=>e.onchange=e.oninput=()=>{S[e.target?e.target.dataset.k:e.dataset.k]=e.value});
  w.b.querySelectorAll("[data-k]").forEach(e=>{e.onchange=()=>{S[e.dataset.k]=e.value;if(e.dataset.k==="cat")sync();else save()}});
- const run=()=>{if(iv)return;const id=S.ses.length?last(S.ses).id+1:1,L=["i:[*] SIMULATED handler started on "+S.host+":"+S.port,"i:[*] Using module "+S.cat+"/"+S.mod,"i:[*] Payload: "+S.pay,"w:[*] Sending demo stage (nothing real is sent)...",S.cat==="exploit"?`o:[+] Fictional session ${id} opened (${S.pay} -> ${S.host})`:"o:[+] Module finished (simulated)"];let i=0;st.textContent="RUNNING";st.className="stt WARN";bar.style.width="0";
-  iv=setInterval(()=>{if(i<L.length){add(L[i++]);bar.style.width=i/L.length*100+"%"}else{clearInterval(iv);iv=null;if(S.cat==="exploit")S.ses.push({id,pay:S.pay,host:S.host,t:clk()});sim("Metasploit",S.host,S.mod);save();ses();st.textContent="COMPLETE";st.className="stt OK";note("Metasploit (sim): module finished")}},350)};
+ const stop=()=>{clearInterval(iv);iv=null;go.disabled=false;stopBtn.disabled=true;st.textContent="STOPPED";st.className="stt"};
+ const run=()=>{if(iv)return;const L=["i:[*] Handler cycle "+(cycle+1)+" initialized on "+S.host+":"+S.port,"i:[*] Module "+S.cat+"/"+S.mod,"i:[*] Payload: "+S.pay,"w:[*] Processing sample event stream...",S.cat==="exploit"?`o:[+] Fictional session activity refreshed (${S.pay} -> ${S.host})`:"o:[+] Module results refreshed"];let i=0;cycle++;go.disabled=true;stopBtn.disabled=false;st.textContent="RUNNING · CYCLE "+cycle;st.className="stt WARN";bar.style.width="0";
+  iv=setInterval(()=>{if(i<L.length){add(L[i++]);bar.style.width=i/L.length*100+"%"}else{if(S.cat==="exploit"&&!S.ses.some(x=>x.id===cycle))S.ses.push({id:cycle,pay:S.pay,host:S.host,t:clk()});sim("Metasploit",S.host,"CYCLE "+cycle);save();ses();i=0;cycle++;st.textContent="RUNNING · CYCLE "+cycle;bar.style.width="0"}},350)};
  const cmd=s=>{add("msf6 > "+s);const[c,a,b]=s.trim().split(/\s+/);
   if(c==="help")add("i:show options | use <module> | set <RHOSTS|LPORT|PAYLOAD> <value> | run | sessions");
   else if(c==="show")add(`i:${S.cat}/${S.mod}  RHOSTS=${S.host}  LPORT=${S.port}  PAYLOAD=${S.pay}`);
@@ -278,14 +285,14 @@ function msfInit(w){
   else if(c==="sessions"){S.ses.forEach(x=>add(`o:Session ${x.id}  ${x.pay}  ${x.host}  ${x.t}`));if(!S.ses.length)add("w:No active sessions")}
   else if(c)add("e:Unknown command: "+c)};
  q(".tp input",w.b).onkeydown=e=>{if(e.key==="Enter"&&e.target.value.trim()){cmd(e.target.value);e.target.value=""}};
- w.b.onclick=e=>{const a=e.target.dataset.a;if(a==="go")run();else if(a==="cl"){o.innerHTML="";bar.style.width="0"}
-  else if(a==="rs"){clearInterval(iv);iv=null;Object.assign(S,{cat:"exploit",mod:MOD.exploit[0],pay:PAY[0],host:SC["Corp LAN"][0].ip,port:"4444",ses:[]});o.innerHTML="";bar.style.width="0";st.textContent="IDLE";st.className="stt";sync();ses()}
+ w.b.onclick=e=>{const a=e.target.dataset.a;if(a==="go")run();else if(a==="st")stop();else if(a==="cl"){o.innerHTML="";bar.style.width="0"}
+  else if(a==="rs"){stop();cycle=0;Object.assign(S,{cat:"exploit",mod:MOD.exploit[0],pay:PAY[0],host:SC["Corp LAN"][0].ip,port:"4444",ses:[]});o.innerHTML="";bar.style.width="0";st.textContent="IDLE";st.className="stt";sync();ses()}
   else if(a==="k"){S.ses=S.ses.filter(x=>x.id!==+e.target.dataset.i);save();ses()}};
- w.close=()=>clearInterval(iv);sync();ses();add("i:Syntax Metasploit-style console (SIMULATED). Type 'help'.")}
+ w.close=()=>clearInterval(iv);w.foc=()=>q(".tp input",w.b)?.focus();sync();ses();add("i:Syntax Metasploit-style console (SIMULATED). Type 'help'.")}
 /* ---------- boot + tick + entry ---------- */
 function boot(done){
  const b=el('<div id="bt"><pre></pre><div class="bar"><i></i></div><button>Skip boot animation</button></div>',hos),pre=q("pre",b),bar=q("i",b);
- const L=["Syntax BIOS v4.2 ................ OK","Kernel loading: vmlinuz-6.6.0-sim ... OK","Hardware detection: 8 cores, 16 GB RAM (simulated)","Starting services: syntaxd netmond scand ... OK","Network subsystem: eth0 UP 10.13.37.100 ... OK","Loading applications: 20 simulated tools ... OK","System ready. NOTHING IS REAL."];let i=0,iv=null;
+ const L=["Syntax BIOS v4.2 ................ OK","Kernel loading: vmlinuz-6.6.0 ... OK","Hardware detection: 8 cores, 16 GB RAM","Starting services: syntaxd netmond scand ... OK","Network subsystem: eth0 UP 10.13.37.100 ... OK","Loading applications: 24 security tools ... OK","System ready."];let i=0,iv=null;
  const fin=()=>{clearInterval(iv);b.remove();done()};
  iv=setInterval(()=>{if(i>=L.length)return fin();pre.textContent+=L[i++]+"\n";bar.style.width=i/L.length*100+"%"},380);
  q("button",b).onclick=fin;q("button",b).focus()}
@@ -302,5 +309,5 @@ function start(){if(D.set.theme)document.documentElement.dataset.theme=D.set.the
  if(!Object.keys(WS).length)openApp("term");note("Syntax Hacker OS ready - simulation only")}
 setInterval(tick,1000);
 const btn=q("#osbtn");
-if(btn)btn.addEventListener("click",()=>{hos.classList.add("on");if(D.set.theme)document.documentElement.dataset.theme=D.set.theme;if(!started){started=true;D.set.boot?boot(start):start()}});
+if(btn)btn.addEventListener("click",()=>{hos.classList.add("on");if(D.set.theme)document.documentElement.dataset.theme=D.set.theme;if(!started){started=true;const mobileKeyboard=D.set.keyboard!==false&&matchMedia("(max-width: 700px)").matches;mobileKeyboard?start():(D.set.boot?boot(start):start())}});
 })();

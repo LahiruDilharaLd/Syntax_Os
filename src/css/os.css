@@ -5,6 +5,8 @@
 .hb,#tb{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 12px;border:1px solid var(--line);background:var(--panel)}
 .hb b.brand{color:var(--acc);letter-spacing:.08em;font-size:16px;font-weight:800;text-shadow:0 0 8px var(--acc)}
 .hb .sp{flex:1}
+.hb button{min-height:30px}
+.hb #kbauto[aria-pressed=true]{background:var(--acc);color:#021}
 #dk{position:relative;overflow:hidden;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--acc) 7%,transparent) 0,var(--bg) 70%)}
 #di{position:absolute;inset:8px auto 8px 8px;display:flex;flex-direction:column;flex-wrap:wrap;gap:8px;align-content:flex-start}
 .ic{display:flex;flex-direction:column;align-items:center;gap:2px;width:96px;padding:6px 4px;border-color:transparent;font-size:11px;text-align:center}
@@ -58,6 +60,7 @@ tr.sel td,.fl tr:hover td{background:color-mix(in srgb,var(--acc) 15%,transparen
 @media(max-width:700px){
  .win{left:0!important;top:0!important;width:100%!important;height:100%!important;resize:none}
  #di{flex-direction:row;inset:6px}.ic{width:72px}.ic small{display:none}.hb{gap:6px}
+ #hos input,#hos textarea{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){#hos::after,.win,.nt{animation:none}}
 
